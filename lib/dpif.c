@@ -544,6 +544,9 @@ dpif_port_add(struct dpif *dpif, struct netdev *netdev, odp_port_t *port_nop)
     }
 
     error = dpif->dpif_class->port_add(dpif, netdev, &port_no);
+
+    vvprintf("vvdn debug : func : %s line : %u  ->port_add : %p error : %d\n",__func__,__LINE__,dpif->dpif_class->port_add,error);
+
     if (!error) {
         VLOG_DBG_RL(&dpmsg_rl, "%s: added %s as port %"PRIu32,
                     dpif_name(dpif), netdev_name, port_no);

@@ -77,6 +77,8 @@ static rx_handler_result_t netdev_frame_hook(struct sk_buff **pskb)
 {
 	struct sk_buff *skb = *pskb;
 
+	printk("vvdn debug : received packet on %s\n",skb->dev->name);
+
 	if (unlikely(skb->pkt_type == PACKET_LOOPBACK))
 		return RX_HANDLER_PASS;
 

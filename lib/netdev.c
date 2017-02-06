@@ -45,6 +45,7 @@
 #include "svec.h"
 #include "openvswitch/vlog.h"
 #include "flow.h"
+#include "vvprintf.h"
 
 VLOG_DEFINE_THIS_MODULE(netdev);
 
@@ -155,6 +156,7 @@ netdev_initialize(void)
         netdev_vport_tunnel_register();
 #endif
         netdev_dpdk_register();
+	netdev_xiluiovs_register();
 
         ovsthread_once_done(&once);
     }
@@ -203,14 +205,27 @@ static struct netdev_registered_class *
 netdev_lookup_class(const char *type)
     OVS_REQ_RDLOCK(netdev_class_mutex)
 {
-    struct netdev_registered_class *rc;
+    struct netdev_registered_class *rc,*ret;
+    int found = 0;
+
+    vvprintf("vvdn debug func : %s line :%u \n",__func__,__LINE__);
 
     HMAP_FOR_EACH_WITH_HASH (rc, hmap_node, hash_string(type, 0),
                              &netdev_classes) {
+
+	vvprintf("vvdn debug :  func : %s line : %u rc->class->type : %s\n",__func__,__LINE__,rc->class->type);
         if (!strcmp(type, rc->class->type)) {
-            return rc;
+	vvprintf("vvdn debug :  func : %s line : %u rc->class->type : %s(matched)\n",__func__,__LINE__,rc->class->type);
+	    found =1;
+	    ret = rc;
+            //return rc;
         }
     }
+
+    if(found) {
+	    return ret;
+    }
+
     return NULL;
 }
 
@@ -222,6 +237,7 @@ netdev_register_provider(const struct netdev_class *new_class)
 {
     int error;
 
+    vvprintf("func : %s line : %u class type : %s class vaddr : %p\n",__func__,__LINE__,new_class->type,new_class);
     netdev_class_mutex_initialize();
     ovs_mutex_lock(&netdev_class_mutex);
     if (netdev_lookup_class(new_class->type)) {
@@ -261,6 +277,7 @@ netdev_unregister_provider(const char *type)
     netdev_initialize();
 
     ovs_mutex_lock(&netdev_class_mutex);
+    vvprintf("vvdn debug :  func : %s line : %u calling netdev_lookup_class() \n",__func__,__LINE__);
     rc = netdev_lookup_class(type);
     if (!rc) {
         VLOG_WARN("attempted to unregister a netdev provider that is not "
@@ -355,6 +372,7 @@ netdev_open(const char *name, const char *type, struct netdev **netdevp)
     struct netdev *netdev;
     int error;
 
+    vvprintf("vvdn debug : func : %s line %u \n",__func__,__LINE__);
     netdev_initialize();
 
     ovs_mutex_lock(&netdev_class_mutex);
@@ -363,10 +381,13 @@ netdev_open(const char *name, const char *type, struct netdev **netdevp)
     if (!netdev) {
         struct netdev_registered_class *rc;
 
+    	vvprintf("vvdn debug :  func : %s line : %u calling netdev_lookup_class() \n",__func__,__LINE__);
         rc = netdev_lookup_class(type && type[0] ? type : "system");
+    	vvprintf("vvdn debug : func : %s line %u rc : %p \n",__func__,__LINE__,rc);
         if (rc) {
             netdev = rc->class->alloc();
             if (netdev) {
+    		vvprintf("vvdn debug : func : %s line %u netdev : %p\n",__func__,__LINE__,netdev);
                 memset(netdev, 0, sizeof *netdev);
                 netdev->netdev_class = rc->class;
                 netdev->name = xstrdup(name);
@@ -379,32 +400,40 @@ netdev_open(const char *name, const char *type, struct netdev **netdevp)
 
                 list_init(&netdev->saved_flags_list);
 
+    		vvprintf("vvdn debug : func : %s line %u rc->class->type : %s\n",__func__,__LINE__,rc->class->type);
                 error = rc->class->construct(netdev);
                 if (!error) {
+    		vvprintf("vvdn debug : func : %s line %u error = %d\n",__func__,__LINE__,error);
                     rc->ref_cnt++;
                     netdev_change_seq_changed(netdev);
                 } else {
+    		vvprintf("vvdn debug : func : %s line %u error = %d\n",__func__,__LINE__,error);
                     free(netdev->name);
                     ovs_assert(list_is_empty(&netdev->saved_flags_list));
                     shash_delete(&netdev_shash, netdev->node);
                     rc->class->dealloc(netdev);
                 }
             } else {
+    		vvprintf("vvdn debug : func : %s line %u error = ENOMEM\n",__func__,__LINE__);
                 error = ENOMEM;
             }
         } else {
             VLOG_WARN("could not create netdev %s of unknown type %s",
                       name, type);
+    	vvprintf("vvdn debug : func : %s line %u could not create netdev %s of unknown type %s \n",__func__,__LINE__,name,type);
             error = EAFNOSUPPORT;
         }
     } else {
+    	vvprintf("vvdn debug : func : %s line %u \n",__func__,__LINE__);
         error = 0;
     }
 
     if (!error) {
+    	vvprintf("vvdn debug : func : %s line %u error : %d \n",__func__,__LINE__,error);
         netdev->ref_cnt++;
         *netdevp = netdev;
     } else {
+    	vvprintf("vvdn debug : func : %s line %u error : %d \n",__func__,__LINE__,error);
         *netdevp = NULL;
     }
     ovs_mutex_unlock(&netdev_mutex);
@@ -522,6 +551,7 @@ netdev_unref(struct netdev *dev)
         ovs_mutex_unlock(&netdev_mutex);
 
         ovs_mutex_lock(&netdev_class_mutex);
+        vvprintf("vvdn debug :  func : %s line : %u calling netdev_lookup_class() \n",__func__,__LINE__);
         rc = netdev_lookup_class(class->type);
         ovs_assert(rc->ref_cnt > 0);
         rc->ref_cnt--;

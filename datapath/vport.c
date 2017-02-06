@@ -109,6 +109,7 @@ void ovs_vport_exit(void)
 
 static struct hlist_head *hash_bucket(const struct net *net, const char *name)
 {
+	printk("vvdn debug : func : %s line : %u net : %p name : %s \n",__func__,__LINE__,net,name);
 	unsigned int hash = jhash(name, strlen(name), (unsigned long) net);
 	return &dev_table[hash & (VPORT_HASH_BUCKETS - 1)];
 }
@@ -222,12 +223,22 @@ EXPORT_SYMBOL_GPL(ovs_vport_free);
 
 static struct vport_ops *ovs_vport_lookup(const struct vport_parms *parms)
 {
-	struct vport_ops *ops;
+	struct vport_ops *ops,*retops;
+	int found = 0;
 
-	list_for_each_entry(ops, &vport_ops_list, list)
-		if (ops->type == parms->type)
-			return ops;
+	list_for_each_entry(ops, &vport_ops_list, list) {
+		
+		printk("vvdn debug : func : %s line : %u ops->type : %d parms->type : %d \n",__func__,__LINE__,ops->type,parms->type);
+		if (ops->type == parms->type) {
+			retops = ops;
+			found = 1;
+		}
 
+	}
+
+	if(found) {
+		return retops;
+	}
 	return NULL;
 }
 
@@ -244,7 +255,9 @@ struct vport *ovs_vport_add(const struct vport_parms *parms)
 	struct vport_ops *ops;
 	struct vport *vport;
 
+
 	ops = ovs_vport_lookup(parms);
+	printk("vvdn debug :  func : %s line : %u parms->type = %d ops : %p\n",__func__,__LINE__,parms->type,ops);
 	if (ops) {
 		struct hlist_head *bucket;
 
@@ -271,10 +284,14 @@ struct vport *ovs_vport_add(const struct vport_parms *parms)
 	request_module("vport-type-%d", parms->type);
 	ovs_lock();
 
-	if (!ovs_vport_lookup(parms))
+	if (!ovs_vport_lookup(parms)) {
+		printk("vvdn debug :  func : %s line : %u EAFNOSUPPORT \n",__func__,__LINE__);
 		return ERR_PTR(-EAFNOSUPPORT);
-	else
+	}
+	else {
+		printk("vvdn debug :  func : %s line : %u EAGAIN \n",__func__,__LINE__);
 		return ERR_PTR(-EAGAIN);
+	}
 }
 
 /**
@@ -325,7 +342,12 @@ void ovs_vport_get_stats(struct vport *vport, struct ovs_vport_stats *stats)
 	const struct rtnl_link_stats64 *dev_stats;
 	struct rtnl_link_stats64 temp;
 
+	printk("vvdn debug : func : %s line : %u \n",__func__,__LINE__);
+
 	dev_stats = dev_get_stats(vport->dev, &temp);
+
+	printk("vvdn debug : func : %s line : %u dev_stats : %p\n",__func__,__LINE__,dev_stats);
+
 	stats->rx_errors  = dev_stats->rx_errors;
 	stats->tx_errors  = dev_stats->tx_errors;
 	stats->tx_dropped = dev_stats->tx_dropped;

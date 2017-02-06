@@ -73,6 +73,7 @@
 #include "timer.h"
 #include "unaligned.h"
 #include "openvswitch/vlog.h"
+#include "vvprintf.h"
 
 VLOG_DEFINE_THIS_MODULE(netdev_linux);
 
@@ -783,10 +784,12 @@ netdev_linux_construct(struct netdev *netdev_)
 
     error = get_flags(&netdev->up, &netdev->ifi_flags);
     if (error == ENODEV) {
+	vvprintf("vvdn debug : func : %s line : %u error == ENODEV \n",__func__,__LINE__);
         if (netdev->up.netdev_class != &netdev_internal_class) {
             /* The device does not exist, so don't allow it to be opened. */
             return ENODEV;
         } else {
+	vvprintf("vvdn debug : func : %s line : %u error == ENODEV and it is netdev_internal_class \n",__func__,__LINE__);
             /* "Internal" netdevs have to be created as netdev objects before
              * they exist in the kernel, because creating them in the kernel
              * happens by passing a netdev object to dpif_port_add().

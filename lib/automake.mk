@@ -341,6 +341,8 @@ if LINUX
 lib_libopenvswitch_la_SOURCES += \
 	lib/dpif-netlink.c \
 	lib/dpif-netlink.h \
+	lib/vvprintf.c \
+	lib/vvprintf.h \
 	lib/if-notifier.c \
 	lib/if-notifier.h \
 	lib/netdev-linux.c \
@@ -357,7 +359,8 @@ lib_libopenvswitch_la_SOURCES += \
 	lib/rtnetlink.c \
 	lib/rtnetlink.h \
 	lib/route-table.c \
-	lib/route-table.h
+	lib/route-table.h \
+	lib/netdev-xiluiovs.c
 endif
 
 if DPDK_NETDEV

@@ -236,8 +236,11 @@ static struct vport *new_vport(const struct vport_parms *parms)
 {
 	struct vport *vport;
 
+	printk("vvdn debug :  func : %s line : %u parms->type = %d\n",__func__,__LINE__,parms->type);
+
 	vport = ovs_vport_add(parms);
 	if (!IS_ERR(vport)) {
+	printk("vvdn debug :  func : %s line : %u vport error\n",__func__,__LINE__);
 		struct datapath *dp = parms->dp;
 		struct hlist_head *head = vport_hash_bucket(dp, vport->port_no);
 
@@ -1601,6 +1604,7 @@ static int ovs_dp_cmd_new(struct sk_buff *skb, struct genl_info *info)
 	/* So far only local changes have been made, now need the lock. */
 	ovs_lock();
 
+	printk("vvdn debug :  func : %s line : %u parms->type = %d\n",__func__,__LINE__,parms.type);
 	vport = new_vport(&parms);
 	if (IS_ERR(vport)) {
 		err = PTR_ERR(vport);
@@ -1986,6 +1990,8 @@ restart:
 	parms.port_no = port_no;
 	parms.upcall_portids = a[OVS_VPORT_ATTR_UPCALL_PID];
 
+	printk("vvdn debug :  func : %s line : %u parms->type = %d\n",__func__,__LINE__,parms.type);
+
 	vport = new_vport(&parms);
 	err = PTR_ERR(vport);
 	if (IS_ERR(vport)) {
@@ -2324,7 +2330,8 @@ static int __init dp_init(void)
 
 	BUILD_BUG_ON(sizeof(struct ovs_skb_cb) > FIELD_SIZEOF(struct sk_buff, cb));
 
-	pr_info("Open vSwitch switching datapath %s\n", VERSION);
+	pr_info("vvdn debug : Open vSwitch switching datapath %s\n", VERSION);
+	printk_once("vvdn debug : Open vSwitch switching datapath %s\n", VERSION);
 
 	err = compat_init();
 	if (err)
@@ -2401,6 +2408,6 @@ static void dp_cleanup(void)
 module_init(dp_init);
 module_exit(dp_cleanup);
 
-MODULE_DESCRIPTION("Open vSwitch switching datapath");
+MODULE_DESCRIPTION("vvdn Open vSwitch switching datapath");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(VERSION);

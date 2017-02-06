@@ -71,6 +71,7 @@
 #include "unixctl.h"
 #include "vlan-bitmap.h"
 #include "openvswitch/vlog.h"
+#include "vvprintf.h"
 
 VLOG_DEFINE_THIS_MODULE(ofproto_dpif);
 
@@ -3453,8 +3454,10 @@ port_add(struct ofproto *ofproto_, struct netdev *netdev)
         odp_port_t port_no = ODPP_NONE;
         int error;
 
+	vvprintf("vvdn debug : func : %s line : %u calling dpif_port_add\n",__func__,__LINE__);
         error = dpif_port_add(ofproto->backer->dpif, netdev, &port_no);
         if (error) {
+	vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
             return error;
         }
         if (netdev_get_tunnel_config(netdev)) {

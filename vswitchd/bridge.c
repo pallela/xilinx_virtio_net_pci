@@ -68,6 +68,7 @@
 #include "sflow_api.h"
 #include "vlan-bitmap.h"
 #include "packets.h"
+#include "vvprintf.h"
 
 VLOG_DEFINE_THIS_MODULE(bridge);
 
@@ -889,6 +890,7 @@ bridge_add_ports__(struct bridge *br, const struct shash *wanted_ports,
                 struct iface *iface = iface_lookup(br, iface_cfg->name);
 
                 if (!iface) {
+    		    vvprintf("vvdn debug : func : %s line %u calling iface_create()\n",__func__,__LINE__);
                     iface_create(br, iface_cfg, port_cfg);
                 }
             }
@@ -1755,6 +1757,7 @@ iface_do_create(const struct bridge *br,
     if (netdev_is_reserved_name(iface_cfg->name)) {
         VLOG_WARN("could not create interface %s, name is reserved",
                   iface_cfg->name);
+    vvprintf("vvdn debug : func : %s line %u could not create interface %s, name is reseved",__func__,__LINE__,iface_cfg->name);
         error = EINVAL;
         goto error;
     }
@@ -1764,17 +1767,21 @@ iface_do_create(const struct bridge *br,
     if (error) {
         VLOG_WARN_BUF(errp, "could not open network device %s (%s)",
                       iface_cfg->name, ovs_strerror(error));
+    vvprintf("vvdn debug : func : %s line %u could not create network device %s (%s) \n",__func__,__LINE__,iface_cfg->name,ovs_strerror(error));
         goto error;
     }
 
     error = iface_set_netdev_config(iface_cfg, netdev, errp);
     if (error) {
+    	vvprintf("vvdn debug : func : %s line %u error : %d\n",__func__,__LINE__,error);
         goto error;
     }
 
     *ofp_portp = iface_pick_ofport(iface_cfg);
+    vvprintf("vvdn debug : func : %s line %u calling ofproto_port_add()\n",__func__,__LINE__);
     error = ofproto_port_add(br->ofproto, netdev, ofp_portp);
     if (error) {
+    	vvprintf("vvdn debug : func : %s line %u error : %d\n",__func__,__LINE__,error);
         goto error;
     }
 
@@ -1813,8 +1820,10 @@ iface_create(struct bridge *br, const struct ovsrec_interface *iface_cfg,
 
     /* Do the bits that can fail up front. */
     ovs_assert(!iface_lookup(br, iface_cfg->name));
+    vvprintf("vvdn debug : func : %s line %u calling iface_do_create\n",__func__,__LINE__);
     error = iface_do_create(br, iface_cfg, port_cfg, &ofp_port, &netdev, &errp);
     if (error) {
+    	vvprintf("vvdn debug : func : %s line %u error : %d\n",__func__,__LINE__,error);
         iface_clear_db_record(iface_cfg, errp);
         free(errp);
         return false;
@@ -1856,6 +1865,7 @@ iface_create(struct bridge *br, const struct ovsrec_interface *iface_cfg,
             error = netdev_open(port->name, "internal", &netdev);
             if (!error) {
                 ofp_port_t fake_ofp_port = OFPP_NONE;
+    		vvprintf("vvdn debug : func : %s line %u calling ofproto_port_add()\n",__func__,__LINE__);
                 ofproto_port_add(br->ofproto, netdev, &fake_ofp_port);
                 netdev_close(netdev);
             } else {

@@ -50,6 +50,7 @@
 #include "timeval.h"
 #include "unixctl.h"
 #include "util.h"
+#include "vvprintf.h"
 
 typedef int dpctl_command_handler(int argc, const char *argv[],
                                   struct dpctl_params *);
@@ -286,6 +287,7 @@ dpctl_add_if(int argc OVS_UNUSED, const char *argv[],
             goto next_destroy_args;
         }
 
+	vvprintf("vvdn debug : func : %s line : %u calling dpif_port_add\n",__func__,__LINE__);
         error = dpif_port_add(dpif, netdev, &port_no);
         if (error) {
             dpctl_error(dpctl_p, error, "adding %s to %s failed", name,

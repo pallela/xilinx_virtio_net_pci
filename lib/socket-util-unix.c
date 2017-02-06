@@ -29,6 +29,7 @@
 #include "random.h"
 #include "util.h"
 #include "openvswitch/vlog.h"
+#include "vvprintf.h"
 
 VLOG_DEFINE_THIS_MODULE(socket_util_unix);
 
@@ -429,6 +430,7 @@ af_inet_ifreq_ioctl(const char *name, struct ifreq *ifr, unsigned long int cmd,
         static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(5, 20);
         VLOG_DBG_RL(&rl, "%s: ioctl(%s) failed: %s", name, cmd_name,
                     ovs_strerror(error));
+	vvprintf("vvdn debug : func : %s line : %u %s: ioctl(%s) failed: %s\n",__func__,__LINE__,name,cmd_name,ovs_strerror(error));
     }
     return error;
 }

@@ -61,6 +61,7 @@
 #include "unixctl.h"
 #include "openvswitch/vlog.h"
 #include "bundles.h"
+#include "vvprintf.h"
 
 VLOG_DEFINE_THIS_MODULE(ofproto);
 
@@ -1956,6 +1957,10 @@ ofproto_port_add(struct ofproto *ofproto, struct netdev *netdev,
     ofp_port_t ofp_port = ofp_portp ? *ofp_portp : OFPP_NONE;
     int error;
 
+    vvprintf("vvdn debug : func : %s line : %u calling ->port_add for \ 
+	ofproto type : %s and ofproto name : %s\n",__func__,__LINE__,ofproto->type,ofproto->name);
+
+    vvprintf("vvdn debug : func : %s line : %u ->port_add : %p\n",__func__,__LINE__,ofproto->ofproto_class->port_add);
     error = ofproto->ofproto_class->port_add(ofproto, netdev);
     if (!error) {
         const char *netdev_name = netdev_get_name(netdev);
@@ -1963,6 +1968,7 @@ ofproto_port_add(struct ofproto *ofproto, struct netdev *netdev,
         simap_put(&ofproto->ofp_requests, netdev_name,
                   ofp_to_u16(ofp_port));
         error = update_port(ofproto, netdev_name);
+	vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
     }
     if (ofp_portp) {
         *ofp_portp = OFPP_NONE;
@@ -1972,12 +1978,15 @@ ofproto_port_add(struct ofproto *ofproto, struct netdev *netdev,
             error = ofproto_port_query_by_name(ofproto,
                                                netdev_get_name(netdev),
                                                &ofproto_port);
+		vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
             if (!error) {
                 *ofp_portp = ofproto_port.ofp_port;
                 ofproto_port_destroy(&ofproto_port);
+		vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
             }
         }
     }
+    vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
     return error;
 }
 

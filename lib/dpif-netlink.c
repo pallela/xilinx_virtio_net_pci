@@ -55,6 +55,8 @@
 #include "unaligned.h"
 #include "util.h"
 #include "openvswitch/vlog.h"
+#include "vvprintf.h"
+#include "netdev-provider.h"
 
 VLOG_DEFINE_THIS_MODULE(dpif_netlink);
 #ifdef _WIN32
@@ -769,6 +771,9 @@ get_vport_type(const struct dpif_netlink_vport *vport)
     case OVS_VPORT_TYPE_STT:
         return "stt";
 
+    case OVS_VPORT_TYPE_XILUIOVS:
+	return "xiluiovs";
+
     case OVS_VPORT_TYPE_UNSPEC:
     case __OVS_VPORT_TYPE_MAX:
         break;
@@ -798,6 +803,8 @@ netdev_to_ovs_vport_type(const struct netdev *netdev)
         return OVS_VPORT_TYPE_VXLAN;
     } else if (!strcmp(type, "lisp")) {
         return OVS_VPORT_TYPE_LISP;
+    } else if (!strcmp(type, "xiluiovs")) {
+        return OVS_VPORT_TYPE_XILUIOVS;
     } else {
         return OVS_VPORT_TYPE_UNSPEC;
     }
@@ -821,9 +828,12 @@ dpif_netlink_port_add__(struct dpif_netlink *dpif, struct netdev *netdev,
     uint32_t *upcall_pids;
     int error = 0;
 
+    vvprintf("vvdn debug :  func : %s line : %u name : %s type : %s netdev->name : %s\n",__func__,__LINE__,name,type,netdev->name);
+
     if (dpif->handlers) {
         socksp = vport_create_socksp(dpif, &error);
         if (!socksp) {
+    	  vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
             return error;
         }
     }
@@ -878,6 +888,7 @@ dpif_netlink_port_add__(struct dpif_netlink *dpif, struct netdev *netdev,
     request.upcall_pids = upcall_pids;
 
     error = dpif_netlink_vport_transact(&request, &reply, &buf);
+    vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
     if (!error) {
         *port_nop = reply.port_no;
     } else {
@@ -892,6 +903,7 @@ dpif_netlink_port_add__(struct dpif_netlink *dpif, struct netdev *netdev,
 
     if (socksp) {
         error = vport_add_channels(dpif, *port_nop, socksp);
+        vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
         if (error) {
             VLOG_INFO("%s: could not add channel for port %s",
                       dpif_name(&dpif->dpif), name);
@@ -2582,17 +2594,20 @@ dpif_netlink_vport_transact(const struct dpif_netlink_vport *request,
             *bufp = NULL;
             dpif_netlink_vport_init(reply);
         }
+        vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
         return error;
     }
 
     request_buf = ofpbuf_new(1024);
     dpif_netlink_vport_to_ofpbuf(request, request_buf);
     error = nl_transact(NETLINK_GENERIC, request_buf, bufp);
+    vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
     ofpbuf_delete(request_buf);
 
     if (reply) {
         if (!error) {
             error = dpif_netlink_vport_from_ofpbuf(reply, *bufp);
+            vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
         }
         if (error) {
             dpif_netlink_vport_init(reply);
@@ -2600,6 +2615,7 @@ dpif_netlink_vport_transact(const struct dpif_netlink_vport *request,
             *bufp = NULL;
         }
     }
+    vvprintf("vvdn debug : func : %s line : %u error : %d\n",__func__,__LINE__,error);
     return error;
 }
 
